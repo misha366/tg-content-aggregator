@@ -1,0 +1,49 @@
+services:
+
+  plan:
+    build:
+      context: .
+      dockerfile: dockerfiles/plan.Dockerfile
+    volumes:
+      - ./src:/var/www/laravel
+    entrypoint: ["sh", "-c", "supervisord -c /etc/supervisord.conf"]
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  mysql:
+    image: mariadb:10.6
+    env_file:
+      - ./mysql/mysql.env
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "--silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 0s
+
+  artisan: # docker compose run --rm artisan parse:pinterest-desk https://site.com/
+    build:
+      context: .
+      dockerfile: dockerfiles/parserkit.Dockerfile
+    entrypoint: ["php", "/var/www/laravel/artisan"]
+    volumes:
+      - ./src:/var/www/laravel
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  composer: # create project in src: docker-compose run --rm composer create-project laravel/laravel .
+    build:
+      context: .
+      dockerfile: dockerfiles/composer.Dockerfile
+    volumes:
+      - ./src:/var/www/laravel
+
+  redis:
+    image: redis:alpine
+
+volumes:
+  db_data:
