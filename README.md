@@ -3,6 +3,13 @@
 
 > docker compose run --rm artisan parse link
 
+> docker compose run --rm artisan post 00:00 23:00 @somechat --per-day=20
+
+1. time to start posting
+2. time to end posting
+3. peer
+4. posts per day
+
 ### how to set up locally?
 - > git clone 
 - create mysql.env & src/.env (redis queue's!!!) files
