@@ -18,5 +18,6 @@
 the parser requires the pyexiv2 package, which won't work on alpine, so for `artisan` I use bookworm
 
 ### thanks
-thanks to @sean1832 for the parser (https://github.com/sean1832/pinterest-dl), that I used in my project
+thanks to [@sean1832](https://github.com/sean1832) for the parser (https://github.com/sean1832/pinterest-dl), that I
+used in my project
 

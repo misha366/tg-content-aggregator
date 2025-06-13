@@ -1,2 +1,3 @@
 *
 !.gitignore
+!detect_duplicates.py
