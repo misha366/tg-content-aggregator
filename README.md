@@ -10,6 +10,8 @@
 3. peer
 4. posts per day
 
+If you run the command for the first time, Madeline Proto will ask you to scan the QR from Telegram to create a session
+
 ### how to set up locally?
 - > git clone 
 - create mysql.env & src/.env (redis queue's!!!) files
