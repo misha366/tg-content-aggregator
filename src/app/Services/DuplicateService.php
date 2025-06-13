@@ -6,8 +6,10 @@ use App\Helpers\ProcessHelper;
 use App\Models\Phash;
 use Illuminate\Support\Facades\Process as LaravelProcess;
 
-class DuplicateService {
-    public function deleteDuplicatesFrom(string $pathToImages, callable $info) {
+class DuplicateService
+{
+    public function deleteDuplicatesFrom(string $pathToImages, callable $info)
+    {
         $detectDuplicatesScriptPath = app_path('PyModules/detect_duplicates.py');
 
         $pip3InVenvPath = app_path('PyModules/venv/bin/pip3');
@@ -16,10 +18,10 @@ class DuplicateService {
         $imagehashPath = app_path('PyModules/venv/lib/python3.11/site-packages/imagehash');
         $PILPath = app_path('PyModules/venv/lib/python3.11/site-packages/PIL');
 
-        if (!is_dir($imagehashPath) || !is_dir($PILPath)) {
+        if (! is_dir($imagehashPath) || ! is_dir($PILPath)) {
             $info('[-] Dependencies required by detect duplicates script were not found. Downloading... [-]');
             ProcessHelper::executeCommandAndShowOutput(
-                $pip3InVenvPath . ' install Pillow imagehash',
+                $pip3InVenvPath.' install Pillow imagehash',
             );
             $info('[+] Dependencies downloaded successfully [+]');
         } else {
@@ -31,9 +33,9 @@ class DuplicateService {
         $phashes = Phash::pluck('hash')->toArray();
 
         $detectProcess = LaravelProcess::timeout(3600)->run(
-            $python3InVenvPath . ' ' .
-            $detectDuplicatesScriptPath . ' ' .
-            $pathToImages . ' ' .
+            $python3InVenvPath.' '.
+            $detectDuplicatesScriptPath.' '.
+            $pathToImages.' '.
             escapeshellarg(json_encode($phashes)),
         );
 
@@ -44,7 +46,7 @@ class DuplicateService {
         foreach ($duplicates as $duplicate) {
             unlink($duplicate);
         }
-        $info('[+] Found & deleted ' . count($duplicates) . ' duplicates [+] ');
+        $info('[+] Found & deleted '.count($duplicates).' duplicates [+] ');
 
         $info('[!] Adding original hashes to DB... [!]');
         foreach ($originalHashes as $hash) {

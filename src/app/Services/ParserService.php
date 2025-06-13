@@ -3,19 +3,18 @@
 namespace App\Services;
 
 use App\Helpers\ProcessHelper;
-use App\Services\DuplicateService;
-use App\Services\StorageService;
 use Illuminate\Support\Facades\File;
 
-class ParserService {
-
+class ParserService
+{
     public function __construct(
         private DuplicateService $duplicateService,
         private StorageService $storageService,
     ) {}
 
-    public function parse(string $pinUrl, callable $info) : int {
-        $info('[!] URL: ' . $pinUrl);
+    public function parse(string $pinUrl, callable $info): int
+    {
+        $info('[!] URL: '.$pinUrl);
 
         $parserGithubUrl = 'https://github.com/sean1832/pinterest-dl';
 
@@ -29,12 +28,12 @@ class ParserService {
 
         $rawImagesPath = storage_path('app/private/raw-images');
 
-        if (!is_dir($parserPath)) {
+        if (! is_dir($parserPath)) {
             $info('[-] Parser not found. Downloading... [-]');
             ProcessHelper::executeCommandAndShowOutput(
-                'git clone ' .
-                $parserGithubUrl . ' ' .
-                $parserPath .
+                'git clone '.
+                $parserGithubUrl.' '.
+                $parserPath.
                 ' --progress'
             );
             $info('[+] Parser downloaded successfully [+]');
@@ -42,17 +41,17 @@ class ParserService {
             $info('[+] Parser found. Continuing... [+]');
         }
 
-        if (!is_dir($venvPath)) {
+        if (! is_dir($venvPath)) {
             $info('[-] Virtual environment not found in PyModules. Creating... [-]');
-            ProcessHelper::executeCommandAndShowOutput('python3 -m venv ' . $venvPath);
+            ProcessHelper::executeCommandAndShowOutput('python3 -m venv '.$venvPath);
             $info('[+] Virtual environment in PyModules created successfully [+]');
         } else {
             $info('[+] Virtual environment found in PyModules. Continuing... [+]');
         }
 
-        if (!is_dir($parserBuildPath)) {
+        if (! is_dir($parserBuildPath)) {
             $info('[-] Parser not built. Building... [-]');
-            ProcessHelper::executeCommandAndShowOutput($pip3InVenvPath . ' install ' . $parserPath);
+            ProcessHelper::executeCommandAndShowOutput($pip3InVenvPath.' install '.$parserPath);
             $info('[+] Parser was built successfully [+]');
         } else {
             $info('[+] Parser is already built. Continuing... [+]');
@@ -61,14 +60,15 @@ class ParserService {
         $info('[!] Starting pinterest-dl process [!]');
 
         ProcessHelper::executeCommandAndShowOutput(
-            $builtParserInVenvPath . ' scrape '. $pinUrl . ' -n 1000 -o ' . $rawImagesPath,
+            $builtParserInVenvPath.' scrape '.$pinUrl.' -n 1000 -o '.$rawImagesPath,
 
             fn ($buffer) => str_contains($buffer, 'cannot identify image file') || // skip heic files
             str_contains($buffer, 'No data found in response') // don't show warn when images are out
         );
 
-        if (!is_dir($rawImagesPath)) {
+        if (! is_dir($rawImagesPath)) {
             echo '[*] An error occurred while parsing, please try again [*]';
+
             return 1;
         }
 

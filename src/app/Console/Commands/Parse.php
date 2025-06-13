@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Services\ParserService;
+use Illuminate\Console\Command;
 
 class Parse extends Command
 {

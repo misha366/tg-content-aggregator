@@ -10,11 +10,13 @@ class ProcessHelper
         string $command,
         ?callable $filter = null,
         int $timeout = 3600
-    ) : void {
+    ): void {
         $process = Process::fromShellCommandline($command);
         $process->setTimeout($timeout);
         $process->run(function ($type, $buffer) use ($filter) {
-            if ($filter !== null && $filter($buffer)) return;
+            if ($filter !== null && $filter($buffer)) {
+                return;
+            }
             echo $buffer;
             flush();
         });
