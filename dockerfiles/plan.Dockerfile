@@ -6,8 +6,8 @@ RUN apk add --no-cache supervisor
 COPY supervisor/supervisord.conf /etc/supervisord.conf
 
 RUN apk add --no-cache tzdata \
-    && cp /usr/share/zoneinfo/Europe/Moscow /etc/localtime \
-    && echo "Europe/Moscow" > /etc/timezone
+    && cp /usr/share/zoneinfo/Europe/Kyiv /etc/localtime \
+    && echo "Europe/Kyiv" > /etc/timezone
 
 RUN apk add --no-cache busybox-suid
 COPY cron/laravel-schedule /etc/crontabs/root
