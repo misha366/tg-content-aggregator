@@ -3,9 +3,16 @@
 namespace App\Services;
 
 use App\Helpers\ProcessHelper;
+use App\Services\DuplicateService;
+use App\Services\StorageService;
 use Illuminate\Support\Facades\File;
 
 class ParserService {
+
+    public function __construct(
+        private DuplicateService $duplicateService,
+        private StorageService $storageService,
+    ) {}
 
     public function parse(string $pinUrl, callable $info) : int {
         $info('[!] URL: ' . $pinUrl);
@@ -53,25 +60,26 @@ class ParserService {
 
         $info('[!] Starting pinterest-dl process [!]');
 
-         ProcessHelper::executeCommandAndShowOutput(
-             $builtParserInVenvPath . ' scrape '. $pinUrl . ' -n 1000 -o ' . $rawImagesPath,
+        ProcessHelper::executeCommandAndShowOutput(
+            $builtParserInVenvPath . ' scrape '. $pinUrl . ' -n 1000 -o ' . $rawImagesPath,
 
-             fn ($buffer) => str_contains($buffer, 'cannot identify image file') || // skip heic files
-                 str_contains($buffer, 'No data found in response') // don't show warn when images are out
-         );
-
-        $info('[+] Images were downloaded successfully. Continuing... [+]');
+            fn ($buffer) => str_contains($buffer, 'cannot identify image file') || // skip heic files
+            str_contains($buffer, 'No data found in response') // don't show warn when images are out
+        );
 
         if (!is_dir($rawImagesPath)) {
             echo '[*] An error occurred while parsing, please try again [*]';
             return 1;
         }
 
-        //
+        $info('[+] Images were downloaded successfully. Continuing... [+]');
 
-        // File::deleteDirectory($rawImagesPath);
+        $this->duplicateService->deleteDuplicatesFrom($rawImagesPath, $info);
+        $this->storageService->saveParsedImagesToStorage($rawImagesPath, $info);
 
-        $info('[+] Parsing completed successfully, images saved to storage. [+]');
+        File::deleteDirectory($rawImagesPath);
+
+        $info('[+] Parsing completed successfully. [+]');
 
         return 0;
     }
