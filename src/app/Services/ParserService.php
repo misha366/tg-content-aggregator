@@ -2,11 +2,10 @@
 
 namespace App\Services;
 
+use App\Helpers\ProcessHelper;
 use Illuminate\Support\Facades\File;
-use Symfony\Component\Process\Process;
 
 class ParserService {
-    const PROCESS_LIFETIME = 3600; // for low-end computers
 
     public function parse(string $pinUrl, callable $info) : int {
         $info('[!] URL: ' . $pinUrl);
@@ -25,7 +24,7 @@ class ParserService {
 
         if (!is_dir($parserPath)) {
             $info('[-] Parser not found. Downloading... [-]');
-            $this->executeCommandAndShowOutput(
+            ProcessHelper::executeCommandAndShowOutput(
                 'git clone ' .
                 $parserGithubUrl . ' ' .
                 $parserPath .
@@ -38,7 +37,7 @@ class ParserService {
 
         if (!is_dir($venvPath)) {
             $info('[-] Virtual environment not found in PyModules. Creating... [-]');
-            $this->executeCommandAndShowOutput('python3 -m venv ' . $venvPath);
+            ProcessHelper::executeCommandAndShowOutput('python3 -m venv ' . $venvPath);
             $info('[+] Virtual environment in PyModules created successfully [+]');
         } else {
             $info('[+] Virtual environment found in PyModules. Continuing... [+]');
@@ -46,7 +45,7 @@ class ParserService {
 
         if (!is_dir($parserBuildPath)) {
             $info('[-] Parser not built. Building... [-]');
-            $this->executeCommandAndShowOutput($pip3InVenvPath . ' install ' . $parserPath);
+            ProcessHelper::executeCommandAndShowOutput($pip3InVenvPath . ' install ' . $parserPath);
             $info('[+] Parser was built successfully [+]');
         } else {
             $info('[+] Parser is already built. Continuing... [+]');
@@ -54,9 +53,12 @@ class ParserService {
 
         $info('[!] Starting pinterest-dl process [!]');
 
-        // $this->executeCommandAndShowOutput(
-        //     $builtParserInVenvPath . ' scrape '. $pinUrl . ' -n 1000 -o ' . $rawImagesPath
-        // );
+         ProcessHelper::executeCommandAndShowOutput(
+             $builtParserInVenvPath . ' scrape '. $pinUrl . ' -n 1000 -o ' . $rawImagesPath,
+
+             fn ($buffer) => str_contains($buffer, 'cannot identify image file') || // skip heic files
+                 str_contains($buffer, 'No data found in response') // don't show warn when images are out
+         );
 
         $info('[+] Images were downloaded successfully. Continuing... [+]');
 
@@ -72,17 +74,5 @@ class ParserService {
         $info('[+] Parsing completed successfully, images saved to storage. [+]');
 
         return 0;
-    }
-
-    private function executeCommandAndShowOutput(string $command) : void {
-        $process = Process::fromShellCommandline($command);
-        $process->setTimeout(self::PROCESS_LIFETIME);
-        $process->run(function ($type, $buffer) {
-            if (str_contains($buffer, 'cannot identify image file')) return; // skip heic files
-            if (str_contains($buffer, 'No data found in response')) return; // end scarping
-
-            echo $buffer;
-            flush();
-        });
     }
 }
