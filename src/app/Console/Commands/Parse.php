@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Service\ParserService;
+use App\Services\ParserService;
 
 class Parse extends Command
 {
@@ -28,8 +28,6 @@ class Parse extends Command
     {
         return $parserService->parse(
             $this->argument('url'),
-
-            [$this, 'error'],
             [$this, 'info']
         );
     }

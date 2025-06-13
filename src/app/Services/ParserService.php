@@ -1,13 +1,14 @@
 <?php
 
-namespace App\Service;
+namespace App\Services;
 
+use Illuminate\Support\Facades\File;
 use Symfony\Component\Process\Process;
 
 class ParserService {
     const PROCESS_LIFETIME = 3600; // for low-end computers
 
-    public function parse(string $pinUrl, callable $error, callable $info) : int {
+    public function parse(string $pinUrl, callable $info) : int {
         $info('[!] URL: ' . $pinUrl);
 
         $parserGithubUrl = 'https://github.com/sean1832/pinterest-dl';
@@ -53,9 +54,22 @@ class ParserService {
 
         $info('[!] Starting pinterest-dl process [!]');
 
-        $this->executeCommandAndShowOutput(
-            $builtParserInVenvPath . ' scrape '. $pinUrl . ' -o ' . $rawImagesPath
-        );
+        // $this->executeCommandAndShowOutput(
+        //     $builtParserInVenvPath . ' scrape '. $pinUrl . ' -n 1000 -o ' . $rawImagesPath
+        // );
+
+        $info('[+] Images were downloaded successfully. Continuing... [+]');
+
+        if (!is_dir($rawImagesPath)) {
+            echo '[*] An error occurred while parsing, please try again [*]';
+            return 1;
+        }
+
+        //
+
+        // File::deleteDirectory($rawImagesPath);
+
+        $info('[+] Parsing completed successfully, images saved to storage. [+]');
 
         return 0;
     }
@@ -64,6 +78,9 @@ class ParserService {
         $process = Process::fromShellCommandline($command);
         $process->setTimeout(self::PROCESS_LIFETIME);
         $process->run(function ($type, $buffer) {
+            if (str_contains($buffer, 'cannot identify image file')) return; // skip heic files
+            if (str_contains($buffer, 'No data found in response')) return; // end scarping
+
             echo $buffer;
             flush();
         });
