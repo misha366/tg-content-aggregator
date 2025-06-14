@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\PostJob;
 use Illuminate\Support\Carbon;
 use InvalidArgumentException;
 
@@ -36,7 +37,7 @@ class PostingService {
         $delays = $this->generateUniqueMinutesDelays($perDay, $minutesDiff);
 
         foreach ($delays as $delay) {
-            // start job with delay
+            PostJob::dispatch($peer)->delay($startTime->copy()->addMinutes($delay));
         }
 
         return 0;
