@@ -11,3 +11,7 @@ RUN apk add --no-cache tzdata \
 
 RUN apk add --no-cache busybox-suid
 COPY cron/laravel-schedule /etc/crontabs/root
+
+RUN apk --no-cache add g++ autoconf linux-headers make redis && \
+    pecl install redis && \
+    docker-php-ext-enable redis
